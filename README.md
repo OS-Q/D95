@@ -14,7 +14,7 @@ RFID标签，用作标记物品信息
 
 #### [文献资料](docs/)
 
-#### [工程文件](project/)
+#### [资源文件](resources/)
 
 
 ---
@@ -27,23 +27,23 @@ RFID标签，用作标记物品信息
 
 #### -> D120：[RFID标签](https://github.com/OS-Q/D120)
 
-用作标签标识物体
+用作RFID标签标识物体，被动触发读写和控制事件
 
-#### D121：[RFID设备](https://github.com/OS-Q/D121)
+#### D121：[NFC标签](https://github.com/OS-Q/D121)
 
-用作RFID读卡设备
+用作NFC标签标识物品，被动触发读写和控制事件
 
-#### D122：[NFC标签](https://github.com/OS-Q/D122)
+#### D122：[蓝牙标签](https://github.com/OS-Q/D122)
 
-用作标签标识物品
+蓝牙被动探测标签，用作被动反馈信息
 
-#### D123：[NFC设备](https://github.com/OS-Q/D123)
+#### D123：[NULL](https://github.com/OS-Q/D123)
 
-用作NFC读卡设备
 
-#### D124：[蓝牙标签](https://github.com/OS-Q/D124)
 
-蓝牙广播标签信息
+#### D124：[NULL](https://github.com/OS-Q/D124)
+
+
 
 #### D125：[NULL](https://github.com/OS-Q/D125)
 
@@ -55,4 +55,4 @@ RFID标签，用作标记物品信息
 
 ####  © qitas@qitas.cn
 ###  [OS-Q redefined Operation System](http://www.OS-Q.com)
-####   @  2019-1-4
+####   @  2019-1-7
