@@ -1,4 +1,4 @@
-﻿# [指纹设备](https://github.com/OS-Q/D17)
+﻿# [指纹模块](https://github.com/OS-Q/D17)
 [![sites](OS-Q/OS-Q.png)](http://www.OS-Q.com)
 #### 归属身份识别：[W3](https://github.com/OS-Q/W3)
 #### 关于系统架构：[OS-Q](https://github.com/OS-Q/OS-Q)
@@ -21,4 +21,4 @@ Edge-Q -> 体系 Q[1,4] -> 节点 M[1,12] -> 平台 W[1,52] -> 设备 D[1,365]
 [SoC资源平台](https://github.com/sochub)
 
 ### [OS-Q : Operation System for edge devices](http://www.OS-Q.com/Edge/D17)
-####  2019-7-7
+####  2019-7-13
