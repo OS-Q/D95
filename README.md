@@ -1,24 +1,20 @@
-﻿# [模块](https://github.com/OS-Q/D17)
+﻿# [sensor](https://github.com/OS-Q/D95)
 [![sites](OS-Q/OS-Q.png)](http://www.OS-Q.com)
-#### 归属身份识别：[W3](https://github.com/OS-Q/W3)
+#### 归属ESP8266：[W14](https://github.com/OS-Q/W14)
 #### 关于系统架构：[OS-Q](https://github.com/OS-Q/OS-Q)
 
-Edge-Q -> 体系 Q[1,4] -> 节点 M[1,12] -> 平台 W[1,52] -> 设备 D[1,365]
+Edge-Q -> Q[4] -> M[12] -> W[52] -> D[365]
 
-### [设备描述](https://github.com/OS-Q/D17/wiki)
+### [资源描述](https://github.com/OS-Q/D95/wiki) 
+
+基于IIC的传感器组件
+
+### [设备资源](https://github.com/OS-Q/D95) 
+
+- [资源](src/)
+- [文档](docs/)
+- [工程](project/)
 
 
-
-### [开放资源](https://github.com/OS-Q/)
-
-* [文档](docs/)
-* [资源](src/)
-* [工程](project/)
-
-### [平台资源](https://github.com/sochub)
-
-主控资料和选型方案详情可查阅
-[SoC资源平台](https://github.com/sochub)
-
-### [OS-Q : Operation System for edge devices](http://www.OS-Q.com/D17)
-####  2019-8-1
+### [OS-Q : Open Solution & Open Source](http://www.OS-Q.com/D95)
+####  2019-8-3
