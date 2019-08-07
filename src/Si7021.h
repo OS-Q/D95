@@ -4,10 +4,24 @@
 #include "Arduino.h"
 #include <Wire.h>
 
+
+#if defined(__AVR__)
+#include <avr/pgmspace.h>                      //use for PROGMEM Arduino AVR
+#elif defined(ESP8266)
+#include <pgmspace.h>                          //use for PROGMEM Arduino ESP8266
+#elif defined(_VARIANT_ARDUINO_STM32_)
+#include <avr/pgmspace.h>                      //use for PROGMEM Arduino STM32
+#endif
+
+
 /*!
  *  I2C ADDRESS/BITS
  */
-#define SI7021_DEFAULT_ADDRESS	0x40
+//#define SI7013_CHIPID                0x0D      //device id SI7013
+//#define SI7020_CHIPID                0x14      //device id SI7020
+//#define SI7021_CHIPID                0x15      //device id SI7021
+
+#define SI7021_DEFAULT_ADDRESS		0x40
 
 #define SI7021_MEASRH_HOLD_CMD           0xE5 /**< Measure Relative Humidity, Hold Master Mode */
 #define SI7021_MEASRH_NOHOLD_CMD         0xF5 /**< Measure Relative Humidity, No Hold Master Mode */
@@ -39,9 +53,14 @@ enum si_sensorType {
  *  @brief  Class that stores state and functions for interacting with
  *          Si7021 Sensor
  */
-class Adafruit_Si7021 {
+class Si7021 {
  public:
-  Adafruit_Si7021(TwoWire *theWire = &Wire);
+  Si7021(TwoWire *theWire = &Wire);
+/*   #if defined(ESP8266)
+   bool     begin(uint8_t sda = SDA, uint8_t scl = SCL);
+   #else
+   bool     begin(void);
+   #endif  */
   bool begin();
 
   float readTemperature();

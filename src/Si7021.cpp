@@ -1,5 +1,5 @@
 /*!
- * @file Adafruit_Si7021.cpp
+ * @file Si7021.cpp
  *
  *  @mainpage Adafruit Si7021 breakout board
  *
@@ -32,11 +32,11 @@
 #include <Si7021.h>
 
 /*!
- *  @brief  Instantiates a new Adafruit_Si7021 class
+ *  @brief  Instantiates a new Si7021 class
  *  @param  *theWire
  *          optional wire object
  */
-Adafruit_Si7021::Adafruit_Si7021(TwoWire *theWire) {
+Si7021::Si7021(TwoWire *theWire) {
   _i2caddr = SI7021_DEFAULT_ADDRESS;
   _wire = theWire;
   sernum_a = sernum_b = 0;
@@ -48,8 +48,24 @@ Adafruit_Si7021::Adafruit_Si7021(TwoWire *theWire) {
 /*!
  *  @brief  Sets up the HW by reseting It, reading serial number and reading revision.
  *  @return Returns true if set up is successful.
+
+#if defined(ESP8266)
+bool Si7021::begin(uint8_t sda, uint8_t scl)
+{
+  Wire.begin(sda, scl);
+  Wire.setClock(100000UL);                           //experimental! ESP8266 i2c bus speed: 100kHz..400kHz/100000UL..400000UL, default 100000UL
+  Wire.setClockStretchLimit(230);                    //experimental! default 230usec
+  Wire.beginTransmission(HTU21D_ADDRESS);
+  if (Wire.endTransmission(true) != 0) return false; //safety check, make sure the sensor is connected
+
+  setResolution(_resolution);
+  setHeater(HTU21D_OFF);
+
+  return true;
+}
+#else
  */
-bool Adafruit_Si7021::begin() {
+bool Si7021::begin() {
   _wire->begin();
 
   reset();
@@ -66,7 +82,7 @@ bool Adafruit_Si7021::begin() {
  *  @brief  Reads the humidity value from Si7021 (No Master hold)
  *  @return Returns humidity as float value or NAN when there is error timeout
  */
-float Adafruit_Si7021::readHumidity() {
+float Si7021::readHumidity() {
   _wire->beginTransmission(_i2caddr);
 
   _wire->write(SI7021_MEASRH_NOHOLD_CMD);
@@ -96,7 +112,7 @@ float Adafruit_Si7021::readHumidity() {
  *  @brief  Reads the temperature value from Si7021 (No Master hold)
  *  @return Returns temperature as float value or NAN when there is error timeout
  */
-float Adafruit_Si7021::readTemperature() {
+float Si7021::readTemperature() {
   _wire->beginTransmission(_i2caddr);
   _wire->write(SI7021_MEASTEMP_NOHOLD_CMD);
   uint8_t err = _wire->endTransmission();
@@ -126,14 +142,14 @@ float Adafruit_Si7021::readTemperature() {
 /*!
  *  @brief  Sends the reset command to Si7021.
  */
-void Adafruit_Si7021::reset() {
+void Si7021::reset() {
   _wire->beginTransmission(_i2caddr);
   _wire->write(SI7021_RESET_CMD);
   _wire->endTransmission();
   delay(50);
 }
 
-void Adafruit_Si7021::_readRevision(void)
+void Si7021::_readRevision(void)
 {
     _wire->beginTransmission(_i2caddr);
     _wire->write((uint8_t)(SI7021_FIRMVERS_CMD >> 8));
@@ -163,7 +179,7 @@ void Adafruit_Si7021::_readRevision(void)
 /*!
  *  @brief  Reads serial number and stores It in sernum_a and sernum_b variable
  */
-void Adafruit_Si7021::readSerialNumber() {
+void Si7021::readSerialNumber() {
   _wire->beginTransmission(_i2caddr);
   _wire->write((uint8_t)(SI7021_ID1_CMD >> 8));
   _wire->write((uint8_t)(SI7021_ID1_CMD & 0xFF));
@@ -245,14 +261,14 @@ void Adafruit_Si7021::readSerialNumber() {
  *  @brief  Returns sensor model established during init 
  *  @return model value
  */
-si_sensorType Adafruit_Si7021::getModel()
+si_sensorType Si7021::getModel()
 {
   return _model;
 }
 
 /*******************************************************************/
 
-void Adafruit_Si7021::_writeRegister8(uint8_t reg, uint8_t value) {
+void Si7021::_writeRegister8(uint8_t reg, uint8_t value) {
   _wire->beginTransmission(_i2caddr);
   _wire->write(reg);
   _wire->write(value);
@@ -261,7 +277,7 @@ void Adafruit_Si7021::_writeRegister8(uint8_t reg, uint8_t value) {
   //Serial.print("Wrote $"); Serial.print(reg, HEX); Serial.print(": 0x"); Serial.println(value, HEX);
 }
 
-uint8_t Adafruit_Si7021::_readRegister8(uint8_t reg) {
+uint8_t Si7021::_readRegister8(uint8_t reg) {
   uint8_t value;
   _wire->beginTransmission(_i2caddr);
   _wire->write((uint8_t)reg);
@@ -279,7 +295,7 @@ uint8_t Adafruit_Si7021::_readRegister8(uint8_t reg) {
   return 0; // Error timeout
 }
 
-uint16_t Adafruit_Si7021::_readRegister16(uint8_t reg) {
+uint16_t Si7021::_readRegister16(uint8_t reg) {
   uint16_t value;
   _wire->beginTransmission(_i2caddr);
   _wire->write(reg);
