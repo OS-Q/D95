@@ -1,58 +1,90 @@
-/**
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
+#ifndef _AM2320_H
+#define _AM2320_H
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+#define AM2320_SENSOR_VERSION 1 ///< the sensor version
+#define AM2320_CMD_READREG    0x03 ///< read register command
+#define AM2320_REG_TEMP_H     0x02 ///< temp register address
+#define AM2320_REG_HUM_H      0x00 ///< humidity register address
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+#include <Adafruit_Sensor.h>
+#include <Wire.h>
 
-    Copyright 2016 Ratthanan Nalintasnai
-**/
-
-#ifndef AM2303_H
-#define AM2303_H
-
-#include <Arduino.h>
-
-// address of AM2320
-#define AM2320_ADDR 0x5C
-
-// maximum number of bytes that can be read consequtively before
-// sensor splits out error
-#define MAX_BYTES_READ 10
-
+/**************************************************************************/
+/*! 
+    @brief  Class that stores state and functions for interacting with AM2320 Temperature & Humidity Unified Sensor
+*/
+/**************************************************************************/
 class AM2320 {
-    public:
-        AM2320();
+public:
+  AM2320(TwoWire *theI2C = &Wire, int32_t tempSensorId=-1, int32_t humiditySensorId=-1);
+  bool begin();
 
-        // initialize AM2320
-        void begin();
-        void begin(int sda, int scl);
+  float readTemperature();
+  float readHumidity();
+  uint16_t readRegister16(uint8_t reg);
+  uint16_t crc16(uint8_t *buffer, uint8_t nbytes);
 
-        bool measure();
+  /**************************************************************************/
+  /*! 
+      @brief  temperature sensor class
+  */
+  /**************************************************************************/
+  class Temperature : public Adafruit_Sensor {
+  public:
+    Temperature(AM2320* parent, int32_t id);
+    bool getEvent(sensors_event_t* event);
+    void getSensor(sensor_t* sensor);
 
-        float getTemperature();
-        float getHumidity();
+  private:
+    AM2320* _parent; ///< the parent sensor object
+    int32_t _id; ///< the sensor id
+  };
 
-        int getErrorCode();
-        
-    private:
-        byte _buf[ MAX_BYTES_READ ];
-        float _temperature;
-        float _humidity;
-        int _errorCode;        
-        void _wake();
-        bool _read_registers(int startAddress, int numByte);
+  /**************************************************************************/
+  /*! 
+      @brief  humidity sensor class
+  */
+  /**************************************************************************/
+  class Humidity : public Adafruit_Sensor {
+  public:
+    Humidity(AM2320* parent, int32_t id);
+    bool getEvent(sensors_event_t* event);
+    void getSensor(sensor_t* sensor);
 
+  private:
+     AM2320* _parent; ///< the parent sensor object
+    int32_t _id; ///< the sensor id
+
+  };
+
+  /**************************************************************************/
+  /*! 
+      @brief  get the temperature sensor object belonging to this class
+      @return the temperature sensor object
+  */
+  /**************************************************************************/
+  Temperature temperature() {
+    return _temp;
+  }
+
+  /**************************************************************************/
+  /*! 
+      @brief  get the humidity sensor object belonging to this class
+      @return the humidity sensor object
+  */
+  /**************************************************************************/
+  Humidity humidity() {
+    return _humidity;
+  }
+
+private:
+  Temperature _temp; ///< the temperature sensor object
+  Humidity _humidity; ///< the humidity sensor object
+  TwoWire *_i2c; ///< the TwoWire object used for I2C connumication
+  uint8_t _i2caddr; ///< the i2c address the device can be found on
+
+  void setName(sensor_t* sensor);
+  void setMinDelay(sensor_t* sensor);
 };
-
-// compute CRC16
-unsigned int crc16(byte *byte, unsigned int numByte);
 
 #endif

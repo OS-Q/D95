@@ -1,128 +1,272 @@
-/**
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
-    Copyright 2016 Ratthanan Nalintasnai
-**/
 
 #include "AM2320.h"
 
-#include <Wire.h>
+  /**************************************************************************/
+  /*! 
+      @brief  Instantiates a new AM2320 class
+      @param theI2C Optional pointer to a TwoWire object that should be used for I2C communication. Defaults to &Wire.
+      @param tempSensorId the id that should be used for the temperature sensor. Defaults to -1
+      @param humiditySensorId the id that should be used for the humidity sensor. Defaults to -1
+  */
+  /**************************************************************************/
+AM2320::AM2320(TwoWire *theI2C, int32_t tempSensorId, int32_t humiditySensorId):
+  _temp(this, tempSensorId),
+  _humidity(this, humiditySensorId),
+  _i2c(theI2C)
+{}
 
-AM2320::AM2320() {
-    // do nothing
+/**************************************************************************/
+/*! 
+    @brief  Setups the hardware
+    @return true
+*/
+/**************************************************************************/
+bool AM2320::begin() {
+  _i2caddr = 0x5C;  // fixed addr
+  _i2c->begin();
+  return true;
 }
 
-void  AM2320::begin() {
-    Wire.begin();
+/**************************************************************************/
+/*! 
+    @brief  read the temperature from the device
+    @return the temperature reading as a floating point value
+*/
+/**************************************************************************/
+float AM2320::readTemperature() {
+  uint16_t t = readRegister16(AM2320_REG_TEMP_H);
+  float ft;
+  if (t == 0xFFFF) return NAN;
+  // check sign bit - the temperature MSB is signed , bit 0-15 are magnitude
+  if(t & 0x8000){
+    ft = -(int16_t)(t&0x7fff);
+  }
+  else {
+    ft = (int16_t)t;
+  }
+  return ft / 10.0;
 }
 
-void AM2320::begin(int sda, int scl) {
-    Wire.begin(sda, scl);
+/**************************************************************************/
+/*! 
+    @brief  read the humidity from the device
+    @return the humidity reading as a floating point value
+*/
+/**************************************************************************/
+float AM2320::readHumidity() {
+  uint16_t h = readRegister16(AM2320_REG_HUM_H);
+  if (h == 0xFFFF) return NAN;
+
+  float fh = h;
+  return fh / 10.0;
 }
 
-float AM2320::getTemperature() {
-    return _temperature;
+/**************************************************************************/
+/*! 
+    @brief  read 2 bytes from a hardware register
+    @param reg the register to read
+    @return the read value as a 2 byte unsigned integer
+*/
+/**************************************************************************/
+uint16_t AM2320::readRegister16(uint8_t reg) {
+  // wake up
+  _i2c->beginTransmission(_i2caddr);
+  _i2c->write(0x00);
+  _i2c->endTransmission();
+  delay(10); // wait 10 ms
+
+  // send a command to read register
+  _i2c->beginTransmission(_i2caddr);
+  _i2c->write(AM2320_CMD_READREG);
+  _i2c->write(reg);
+  _i2c->write(2);  // 2 bytes
+  _i2c->endTransmission();
+
+  delay(2);  // wait 2 ms
+  
+  // 2 bytes preamble, 2 bytes data, 2 bytes CRC
+  _i2c->requestFrom(_i2caddr, (uint8_t)6);
+  if (_i2c->available() != 6)
+    return 0xFFFF;
+  
+  uint8_t buffer[6];
+  for (int i=0; i<6; i++) {
+    buffer[i] = _i2c->read();
+    //Serial.print("byte #"); Serial.print(i); Serial.print(" = 0x"); Serial.println(buffer[i], HEX);
+  }
+
+  if (buffer[0] != 0x03)   return 0xFFFF; // must be 0x03 modbus reply
+  if (buffer[1] != 2)      return 0xFFFF; // must be 2 bytes reply
+  
+  uint16_t the_crc = buffer[5];
+  the_crc <<= 8;
+  the_crc |= buffer[4];
+  uint16_t calc_crc = crc16(buffer, 4); // preamble + data
+  //Serial.print("CRC: 0x"); Serial.println(calc_crc, HEX);
+  if (the_crc != calc_crc)
+    return 0xFFFF;
+
+  // All good!
+  uint16_t ret = buffer[2];
+  ret <<= 8;
+  ret |= buffer[3];
+
+  return ret;
 }
 
-float AM2320::getHumidity() {
-    return _humidity;
-}
-
-bool AM2320::measure() {
-    _errorCode = 0;
-
-    if ( ! _read_registers(0x00, 4)) {
-        _errorCode = 1;
-        return false;
+/**************************************************************************/
+/*! 
+    @brief  perfor a CRC check to verify data
+    @param buffer the pointer to the data to check
+    @param nbytes the number of bytes to calculate the CRC over
+    @return the calculated CRC
+*/
+/**************************************************************************/
+uint16_t AM2320::crc16(uint8_t *buffer, uint8_t nbytes) {
+  uint16_t crc = 0xffff;
+  for (int i=0; i<nbytes; i++) {
+    uint8_t b = buffer[i];
+    crc ^= b;
+    for (int x=0; x<8; x++) {
+      if (crc & 0x0001) {
+	crc >>= 1;
+	crc ^= 0xA001;
+      } else {
+	crc >>= 1;
+      }
     }
-
-    unsigned int receivedCrc = 0;       // allocate 16 bits for storing crc from sensor
-    receivedCrc = ((receivedCrc | _buf[7]) << 8 | _buf[6]);   // pack high and low byte together
-
-    if (receivedCrc == crc16(_buf, 6)) {
-        int humudity = ((_buf[2] << 8) | _buf[3]);
-        _humidity =  humudity / 10.0;
-
-        int temperature = ((_buf[4] & 0x7F) << 8) | _buf[5];
-        if ((_buf[2] & 0x80) >> 8 == 1) {       // negative temperature
-            _temperature = (temperature / 10.0) * -1;    // devide data by 10 according to the datasheet
-        }
-        else {                                  // positive temperature
-            _temperature = temperature / 10.0;           // devide data by 10 according to the datasheet
-        }
-
-        return true;
-    }
-    else {
-        _errorCode = 2;
-        return false;
-    }
-
+  }
+  return crc;
 }
 
-int AM2320::getErrorCode() {
-    return _errorCode;
+/**************************************************************************/
+/*! 
+    @brief  set the name of the sensor
+    @param sensor a pointer to the sensor
+*/
+/**************************************************************************/
+void AM2320::setName(sensor_t* sensor) {
+  strncpy(sensor->name, "AM2320", sizeof(sensor->name) - 1);
 }
 
-bool AM2320::_read_registers(int startAddress, int numByte) {
-    _wake();                // wake up sensor
-
-    Wire.beginTransmission(AM2320_ADDR);
-    Wire.write(0x03);           // function code: 0x03 - read register data
-    Wire.write(startAddress);   // begin address
-    Wire.write(numByte);        // number of bytes to read
-
-    // send and check result if not success, return error code
-    if (Wire.endTransmission(true) != 0) {        
-        return false;                           // return sensor not ready code
-    }
-    delayMicroseconds(1500);                    // as specified in datasheet
-    Wire.requestFrom(AM2320_ADDR, numByte + 4); // request bytes from sensor
-                                                // see function code description in datasheet    
-    for ( int i = 0; i < numByte + 4; i++) {    // read
-        _buf[i] = Wire.read();
-    }
-
-    return true;
+/**************************************************************************/
+/*! 
+    @brief  set minimum delay to a fixed value of 2 seconds
+    @param sensor a pointer to the sensor
+*/
+/**************************************************************************/
+void AM2320::setMinDelay(sensor_t* sensor) {
+  sensor->min_delay = 2000000L;  // 2 seconds (in microseconds)
 }
 
-void AM2320::_wake() {
-    Wire.beginTransmission(AM2320_ADDR);
-    Wire.endTransmission();
+/**************************************************************************/
+/*! 
+    @brief  create a temperature sensor instance
+    @param parent the pointer to the parent sensor
+    @param id the id value for the sensor
+*/
+/**************************************************************************/
+AM2320::Temperature::Temperature(AM2320* parent, int32_t id):
+  _parent(parent),
+  _id(id)
+{}
+
+/**************************************************************************/
+/*! 
+    @brief read the temperature from the device and populate a sensor_event_t with the value
+    @param event a pointer to the event to populate
+    @return true
+*/
+/**************************************************************************/
+bool AM2320::Temperature::getEvent(sensors_event_t* event) {
+  // Clear event definition.
+  memset(event, 0, sizeof(sensors_event_t));
+  // Populate sensor reading values.
+  event->version     = sizeof(sensors_event_t);
+  event->sensor_id   = _id;
+  event->type        = SENSOR_TYPE_AMBIENT_TEMPERATURE;
+  event->timestamp   = millis();
+  event->temperature = _parent->readTemperature();
+  
+  return true;
 }
 
-unsigned int crc16(byte *byte, unsigned int numByte) {
-    unsigned int crc = 0xFFFF;          // 16-bit crc register
+/**************************************************************************/
+/*! 
+    @brief populate a sensor_t with data for this sensor
+    @param sensor a pointer to the sensor_t to populate
+*/
+/**************************************************************************/
+void AM2320::Temperature::getSensor(sensor_t* sensor) {
+  // Clear sensor definition.
+  memset(sensor, 0, sizeof(sensor_t));
+  // Set sensor name.
+  _parent->setName(sensor);
+  // Set version and ID
+  sensor->version         = AM2320_SENSOR_VERSION;
+  sensor->sensor_id       = _id;
+  // Set type and characteristics.
+  sensor->type            = SENSOR_TYPE_AMBIENT_TEMPERATURE;
+  _parent->setMinDelay(sensor);
 
-    while (numByte > 0) {               // loop until process all bytes
-        crc ^= *byte;                   // exclusive-or crc with first byte
+  // This isn't documented, of course
+  sensor->max_value   = 80.0F;
+  sensor->min_value   = -20.0F;
+  sensor->resolution  = 2.0F;
+}
 
-        for (int i = 0; i < 8; i++) {       // perform 8 shifts
-            unsigned int lsb = crc & 0x01;  // extract LSB from crc
-            crc >>= 1;                      // shift be one position to the right
+/**************************************************************************/
+/*! 
+    @brief  create a humidity sensor instance
+    @param parent the pointer to the parent sensor
+    @param id the id value for the sensor
+*/
+/**************************************************************************/
+AM2320::Humidity::Humidity(AM2320* parent, int32_t id):
+  _parent(parent),
+  _id(id)
+{}
 
-            if (lsb == 0) {                 // LSB is 0
-                continue;                   // repete the process
-            }
-            else {                          // LSB is 1
-                crc ^= 0xA001;              // exclusive-or with 1010 0000 0000 0001
-            }
-        }
+/**************************************************************************/
+/*! 
+    @brief read the humidity from the device and populate a sensor_event_t with the value
+    @param event a pointer to the event to populate
+    @return true
+*/
+/**************************************************************************/
+bool AM2320::Humidity::getEvent(sensors_event_t* event) {
+  // Clear event definition.
+  memset(event, 0, sizeof(sensors_event_t));
+  // Populate sensor reading values.
+  event->version           = sizeof(sensors_event_t);
+  event->sensor_id         = _id;
+  event->type              = SENSOR_TYPE_RELATIVE_HUMIDITY;
+  event->timestamp         = millis();
+  event->relative_humidity = _parent->readHumidity();
+  
+  return true;
+}
 
-        numByte--;          // decrement number of byte left to be processed
-        byte++;             // move to next byte
-    }
+/**************************************************************************/
+/*! 
+    @brief populate a sensor_t with data for this sensor
+    @param sensor a pointer to the sensor_t to populate
+*/
+/**************************************************************************/
+void AM2320::Humidity::getSensor(sensor_t* sensor) {
+  // Clear sensor definition.
+  memset(sensor, 0, sizeof(sensor_t));
+  // Set sensor name.
+  _parent->setName(sensor);
+  // Set version and ID
+  sensor->version         = AM2320_SENSOR_VERSION;
+  sensor->sensor_id       = _id;
+  // Set type and characteristics.
+  sensor->type            = SENSOR_TYPE_RELATIVE_HUMIDITY;
+  _parent->setMinDelay(sensor);
 
-    return crc;
+  // This isn't documented, of course
+  sensor->max_value   = 100.0F;
+  sensor->min_value   = 0.0F;
+  sensor->resolution  = 1.0F;
 }
