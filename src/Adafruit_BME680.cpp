@@ -1,31 +1,3 @@
-/*!
- * @file Adafruit_BME680.cpp
- *
- * @mainpage Adafruit BME680 temperature, humidity, barometric pressure and gas sensor driver
- *
- * @section intro_sec Introduction
- *
- * This is the documentation for Adafruit's BME680 driver for the
- * Arduino platform.  It is designed specifically to work with the
- * Adafruit BME680 breakout: https://www.adafruit.com/products/3660
- *
- * These sensors use I2C to communicate, 2 pins (SCL+SDA) are required
- * to interface with the breakout.
- *
- * Adafruit invests time and resources providing this open source code,
- * please support Adafruit and open-source hardware by purchasing
- * products from Adafruit!
- *
- * @section author Author
- *
- * Written by Ladyada for Adafruit Industries.
- *
- * @section license License
- *
- * BSD license, all text here must be included in any redistribution.
- *
- */
-
 #include "Arduino.h"
 #include "Adafruit_BME680.h"
 

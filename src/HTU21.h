@@ -1,6 +1,6 @@
 
-#ifndef _HTU21DF_H
-#define _HTU21DF_H
+#ifndef _HTU21_H
+#define _HTU21_H
 
 #if (ARDUINO >= 100)
  #include "Arduino.h"
@@ -10,29 +10,29 @@
 #include "Wire.h"
 
 /** Default I2C address for the HTU21D. */
-#define HTU21DF_I2CADDR         (0x40)
+#define HTU21_I2CADDR         (0x40)
 
 /** Read temperature register. */
-#define HTU21DF_READTEMP        (0xE3)
+#define HTU21_READTEMP        (0xE3)
 
 /** Read humidity register. */
-#define HTU21DF_READHUM         (0xE5)
+#define HTU21_READHUM         (0xE5)
 
 /** Write register command. */
-#define HTU21DF_WRITEREG        (0xE6)
+#define HTU21_WRITEREG        (0xE6)
 
 /** Read register command. */
-#define HTU21DF_READREG         (0xE7)
+#define HTU21_READREG         (0xE7)
 
 /** Reset command. */
-#define HTU21DF_RESET           (0xFE)
+#define HTU21_RESET           (0xFE)
 
 /**
- * Driver for the Adafruit HTU21DF breakout board.
+ * Driver for the Adafruit HTU21 breakout board.
  */
-class HTU21DF {
+class HTU21 {
     public:
-        HTU21DF();
+        HTU21();
 
         boolean begin(void);
         float   readTemperature(void);
@@ -44,4 +44,4 @@ class HTU21DF {
         float _last_humidity, _last_temp;
 };
 
-#endif /* _ADAFRUIT_HTU21DF_H */
+#endif /* _ADAFRUIT_HTU21_H */

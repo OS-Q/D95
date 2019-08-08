@@ -1,7 +1,5 @@
 /***************************************************************************************************/
 /*
-  This is an Arduino library for SHT21, HTU21D & Si70xx Digital Humidity and Temperature Sensor
-
   This chip uses I2C bus to communicate, specials pins are required to interface
   Board:                                    SDA                    SCL                    Level
   Uno, Mini, Pro, ATmega168, ATmega328..... A4                     A5                     5v
