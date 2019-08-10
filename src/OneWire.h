@@ -48,7 +48,7 @@
 #endif
 
 // Board-specific macros for direct GPIO
-#include "util/OneWire_direct_regtype.h"
+#include "OneWire_direct_regtype.h"
 
 class OneWire
 {
