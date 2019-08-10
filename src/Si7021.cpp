@@ -1,32 +1,3 @@
-/*!
- * @file Si7021.cpp
- *
- *  @mainpage Adafruit Si7021 breakout board
- *
- *  @section intro_sec Introduction
- *
- *  This is a library for the Si7021 Temperature & Humidity Sensor.
- *
- *  Designed specifically to work with the Adafruit Si7021 Breakout Board.
- *
- *  Pick one up today in the adafruit shop!
- *  ------> https://www.adafruit.com/product/3251
- *
- *  These sensors use I2C to communicate, 2 pins are required to interface.
- *
- *  Adafruit invests time and resources providing this open source code,
- *  please support Adafruit andopen-source hardware by purchasing products
- *  from Adafruit!
- *
- *  @section author Author
- *
- *  Limor Fried (Adafruit Industries)
- *
- *  @section license License
- *
- *  BSD license, all text above must be included in any redistribution
- */
-
 #include "Arduino.h"
 #include <Wire.h>
 #include <Si7021.h>

@@ -6,7 +6,7 @@
 #define AM2320_REG_TEMP_H     0x02 ///< temp register address
 #define AM2320_REG_HUM_H      0x00 ///< humidity register address
 
-#include <Adafruit_Sensor.h>
+#include <Arduino_Sensor.h>
 #include <Wire.h>
 
 /**************************************************************************/
@@ -29,7 +29,7 @@ public:
       @brief  temperature sensor class
   */
   /**************************************************************************/
-  class Temperature : public Adafruit_Sensor {
+  class Temperature : public Arduino_Sensor {
   public:
     Temperature(AM2320* parent, int32_t id);
     bool getEvent(sensors_event_t* event);
@@ -45,7 +45,7 @@ public:
       @brief  humidity sensor class
   */
   /**************************************************************************/
-  class Humidity : public Adafruit_Sensor {
+  class Humidity : public Arduino_Sensor {
   public:
     Humidity(AM2320* parent, int32_t id);
     bool getEvent(sensors_event_t* event);

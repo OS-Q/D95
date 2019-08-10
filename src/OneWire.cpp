@@ -1,6 +1,6 @@
 #include <Arduino.h>
 #include "OneWire.h"
-#include "util/OneWire_direct_gpio.h"
+#include "OneWire_direct_gpio.h"
 
 
 void OneWire::begin(uint8_t pin)
